@@ -2,15 +2,147 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>単語並び替えゲーム</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>English Games</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, "Meiryo", sans-serif;
+      background: #f4f7fb;
+      color: #243447;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 50px 20px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .header h1 {
+      font-size: 36px;
+      margin: 0 0 10px;
+      letter-spacing: 1px;
+    }
+
+    .header p {
+      margin: 0;
+      color: #667788;
+      font-size: 16px;
+    }
+
+    .games {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .game-card {
+      background: white;
+      border-radius: 16px;
+      padding: 30px 20px;
+      text-align: center;
+      text-decoration: none;
+      color: #243447;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .game-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.13);
+    }
+
+    .icon {
+      font-size: 42px;
+      margin-bottom: 15px;
+    }
+
+    .game-card h2 {
+      margin: 0 0 8px;
+      font-size: 22px;
+    }
+
+    .game-card p {
+      margin: 0;
+      color: #718096;
+      font-size: 14px;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 45px;
+      color: #9aa5b1;
+      font-size: 13px;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding-top: 35px;
+      }
+
+      .header h1 {
+        font-size: 30px;
+      }
+
+      .games {
+        grid-template-columns: 1fr;
+        gap: 15px;
+      }
+
+      .game-card {
+        padding: 24px 20px;
+      }
+    }
+  </style>
 </head>
+
 <body>
 
-  <h1>単語並び替えゲーム</h1>
+  <div class="container">
 
-  <p><a href="grade1.html">Grade 1</a></p>
-  <p><a href="grade2.html">Grade 2</a></p>
-  <p><a href="grade3.html">Grade 3</a></p>
+    <div class="header">
+      <h1>🎮 English Games</h1>
+      <p>Choose a game and challenge yourself!</p>
+    </div>
+
+    <div class="games">
+
+      <a class="game-card" href="grade1.html">
+        <div class="icon">📝</div>
+        <h2>Grade 1</h2>
+        <p>Sentence Order Game</p>
+      </a>
+
+      <a class="game-card" href="grade2.html">
+        <div class="icon">🚀</div>
+        <h2>Grade 2</h2>
+        <p>Sentence Order Game</p>
+      </a>
+
+      <a class="game-card" href="grade3.html">
+        <div class="icon">🏆</div>
+        <h2>Grade 3</h2>
+        <p>Sentence Order Game</p>
+      </a>
+
+    </div>
+
+    <div class="footer">
+      English Learning Games
+    </div>
+
+  </div>
 
 </body>
 </html>
