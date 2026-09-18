@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>英文並び替えゲーム（2年生）</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --main: #2f5fa8;
+    --main-dark: #1f3f75;
+    --accent: #ffb347;
+    --correct: #3fae5b;
+    --wrong: #e0524a;
+    --bg: #eef2f8;
+    --card: #ffffff;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:"Segoe UI","Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",Arial,sans-serif;
+    background:linear-gradient(180deg,#eef2f8 0%,#dbe4f3 100%);
+    min-height:100vh;
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    padding:24px 12px;
+  }
+  .wrap{
+    width:100%;
+    max-width:720px;
+  }
+  h1{
+    text-align:center;
+    color:var(--main-dark);
+    font-size:1.5rem;
+    margin-bottom:4px;
+  }
+  .sub{
+    text-align:center;
+    color:#5a6b8c;
+    font-size:0.85rem;
+    margin-bottom:18px;
+  }
+  .panel{
+    background:var(--card);
+    border-radius:16px;
+    padding:20px;
+    box-shadow:0 6px 20px rgba(31,63,117,0.12);
+    margin-bottom:16px;
+  }
+  .top-bar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-bottom:16px;
+  }
+  .progress{
+    font-weight:bold;
+    color:var(--main-dark);
+    font-size:0.95rem;
+  }
+  .score{
+    color:var(--main);
+    font-size:0.95rem;
+  }
+  .timer{
+    color:var(--accent);
+    background:#fff4e2;
+    border-radius:8px;
+    padding:3px 10px;
+    font-weight:bold;
+    font-size:0.9rem;
+    font-variant-numeric:tabular-nums;
+  }
+  .level-select{
+    display:flex;
+    gap:8px;
+    align-items:center;
+    font-size:0.85rem;
+    color:#444;
+  }
+  .level-select select{
+    padding:4px 8px;
+    border-radius:8px;
+    border:1px solid #ccc;
+    font-size:0.85rem;
+  }
+  .jp-hint{
+    text-align:center;
+    color:#888;
+    font-size:0.95rem;
+    min-height:1.3em;
+    margin-bottom:10px;
+  }
+  .answer-area{
+    min-height:64px;
+    border:2px dashed #b7c4de;
+    border-radius:12px;
+    padding:10px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    align-items:center;
+    margin-bottom:18px;
+    background:#f7f9fd;
+    transition:border-color 0.2s, background 0.2s;
+  }
+  .answer-area.correct{
+    border-color:var(--correct);
+    background:#eafaf0;
+  }
+  .answer-area.wrong{
+    border-color:var(--wrong);
+    background:#fdeceb;
+  }
+  .word-bank{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    justify-content:center;
+    min-height:52px;
+    margin-bottom:18px;
+  }
+  .word-btn{
+    padding:11px 18px;
+    border-radius:10px;
+    border:none;
+    background:var(--main);
+    color:#fff;
+    font-size:1.1rem;
+    font-weight:700;
+    letter-spacing:0.02em;
+    cursor:pointer;
+    box-shadow:0 3px 0 var(--main-dark);
+    transition:transform 0.08s;
+    user-select:none;
+  }
+  .word-btn:active{
+    transform:translateY(2px);
+    box-shadow:0 1px 0 var(--main-dark);
+  }
+  .answer-word{
+    padding:11px 18px;
+    border-radius:10px;
+    background:var(--accent);
+    color:#5a3a00;
+    font-size:1.1rem;
+    font-weight:700;
+    letter-spacing:0.02em;
+    cursor:pointer;
+    box-shadow:0 3px 0 #c98a1f;
+    user-select:none;
+  }
+  .btn-row{
+    display:flex;
+    gap:10px;
+    justify-content:center;
+    flex-wrap:wrap;
+  }
+  button.action{
+    padding:10px 20px;
+    border-radius:10px;
+    border:none;
+    font-size:0.95rem;
+    cursor:pointer;
+    font-weight:bold;
+  }
+  .btn-submit{
+    background:var(--main);
+    color:#fff;
+  }
+  .btn-hint{
+    background:#fff;
+    color:var(--main);
+    border:2px solid var(--main) !important;
+  }
+  .btn-next{
+    background:var(--correct);
+    color:#fff;
+    display:none;
+  }
+  .attempts{
+    text-align:center;
+    color:var(--wrong);
+    font-weight:bold;
+    font-size:0.9rem;
+    margin-bottom:10px;
+  }
+  .feedback{
+    text-align:center;
+    font-weight:bold;
+    min-height:1.4em;
+    margin-top:14px;
+    font-size:1rem;
+  }
+  .feedback.correct{color:var(--correct);}
+  .feedback.wrong{color:var(--wrong);}
+  .finish{
+    text-align:center;
+    padding:30px 10px;
+  }
+  .finish h2{color:var(--main-dark);}
+  .finish .finish-time{
+    color:var(--main);
+    font-size:1.1rem;
+    font-weight:bold;
+    margin:6px 0 16px;
+  }
+  .finish-btns{
+    display:flex;
+    gap:10px;
+    justify-content:center;
+    flex-wrap:wrap;
+  }
+  .finish-btns button{
+    padding:12px 22px;
+    border-radius:10px;
+    border:none;
+    font-size:1rem;
+    cursor:pointer;
+    font-weight:bold;
+  }
+  .btn-restart{
+    background:var(--main);
+    color:#fff;
+  }
+  .btn-review{
+    background:var(--accent);
+    color:#5a3a00;
+    display:none;
+  }
+  .file-panel{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+    background:#f2f5fb;
+    border-radius:12px;
+    padding:12px 14px;
+    margin-bottom:16px;
+    font-size:0.85rem;
+    color:#3a4a68;
+  }
+  .file-panel label.file-btn{
+    background:var(--main);
+    color:#fff;
+    padding:8px 14px;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:bold;
+    white-space:nowrap;
+  }
+  .file-panel input[type="file"]{
+    display:none;
+  }
+  .file-status{
+    flex:1;
+    min-width:150px;
+  }
+  .file-status.error{ color:var(--wrong); font-weight:bold; }
+  .file-status.ok{ color:var(--correct); font-weight:bold; }
+
+  .start-panel{
+    text-align:center;
+  }
+  .start-panel h2{
+    color:var(--main-dark);
+    margin-top:0;
+    font-size:1.15rem;
+  }
+  .start-options{
+    display:flex;
+    justify-content:center;
+    gap:24px;
+    flex-wrap:wrap;
+    margin:18px 0 22px;
+  }
+  .start-options .opt{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    align-items:center;
+    font-size:0.85rem;
+    color:#444;
+  }
+  .start-options select{
+    padding:8px 12px;
+    border-radius:8px;
+    border:1px solid #ccc;
+    font-size:0.95rem;
+  }
+  .start-btn{
+    padding:14px 34px;
+    border-radius:12px;
+    border:none;
+    background:var(--main);
+    color:#fff;
+    font-size:1.05rem;
+    font-weight:bold;
+    cursor:pointer;
+    box-shadow:0 4px 0 var(--main-dark);
+  }
+  .start-btn:active{
+    transform:translateY(2px);
+    box-shadow:0 2px 0 var(--main-dark);
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>英文並び替えゲーム</h1>
+  <div class="sub">単語をタップして、正しい語順の英文を作ろう！</div>
+
+  <div class="file-panel">
+    <!-- 生徒配布版：誤操作防止のためファイル選択ボタンは非表示にしています。
+         教師が手元で別のcsv/xlsxを試したいときは、下の1行のコメントを外せば復活できます。
+    <label class="file-btn" for="fileInput">📂 問題ファイルを選択（xlsx / csv）</label>
+    -->
+    <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display:none;">
+    <span class="file-status" id="fileStatus">読み込み中…</span>
+  </div>
+
+  <div class="panel start-panel" id="startPanel">
+    <h2>プレイ設定</h2>
+    <div class="start-options">
+      <div class="opt">
+        出題数
+        <select id="countSelect"></select>
+      </div>
+      <div class="opt">
+        レベル
+        <select id="levelSelect">
+          <option value="1">レベル1（おとりなし）</option>
+          <option value="2">レベル2（おとりあり）</option>
+        </select>
+      </div>
+    </div>
+    <button class="start-btn" id="startBtn">スタート！</button>
+    <div>
+      <button class="action btn-hint" id="weakReviewBtn" style="margin-top:14px; display:none;">苦手問題を復習する</button>
+    </div>
+  </div>
+
+  <div class="panel" id="gamePanel" style="display:none;">
+    <div class="top-bar">
+      <div class="progress" id="progress">問題 1 / 8</div>
+      <div class="timer" id="timer">⏱ 0:00</div>
+      <div class="score" id="score">正解: 0</div>
+    </div>
+    <div class="attempts" id="attemptsEl">残り挑戦回数: 3回</div>
+
+    <div class="jp-hint" id="jpHint"></div>
+
+    <div class="answer-area" id="answerArea"></div>
+
+    <div class="word-bank" id="wordBank"></div>
+
+    <div class="btn-row">
+      <button class="action btn-hint" id="hintBtn">ヒント（日本語訳）</button>
+      <button class="action btn-submit" id="submitBtn">答え合わせ</button>
+      <button class="action btn-next" id="nextBtn">次の問題 →</button>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+  </div>
+
+  <div class="panel finish" id="finishPanel" style="display:none;">
+    <h2 id="finishTitle">お疲れさま！</h2>
+    <p id="finishScore"></p>
+    <p class="finish-time" id="finishTime"></p>
+    <div class="finish-btns">
+      <button class="btn-review" id="reviewBtn">間違えた問題を復習する</button>
+      <button class="btn-restart" id="restartBtn">設定画面に戻る</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ==========================================================
+   問題データ
+   ここに問題を追加すれば自動的にゲームに反映されます。
+   words   : 正しい語順の単語配列（この順番が正解）
+   jp      : 日本語訳（ヒント表示用）
+   decoys  : レベル2で追加される「おとり」単語（不要な単語）
+   ========================================================== */
+const QUESTIONS = [
+  { words: ["I", "like", "soccer", "."], jp: "私はサッカーが好きです。", decoys: ["you", "likes"] },
+  { words: ["She", "is", "reading", "a", "book", "."], jp: "彼女は本を読んでいます。", decoys: ["read", "am"] },
+  { words: ["Do", "you", "have", "a", "pen", "?"], jp: "あなたはペンを持っていますか。", decoys: ["Does", "has"] },
+  { words: ["We", "went", "to", "the", "park", "yesterday", "."], jp: "私たちは昨日公園に行きました。", decoys: ["go", "goes"] },
+  { words: ["This", "is", "the", "book", "that", "I", "bought", "."], jp: "これは私が買った本です。", decoys: ["was", "buy"] },
+  { words: ["My", "brother", "can", "swim", "very", "fast", "."], jp: "私の兄はとても速く泳ぐことができます。", decoys: ["swims", "could"] },
+  { words: ["What", "time", "does", "the", "train", "leave", "?"], jp: "電車は何時に出発しますか。", decoys: ["do", "leaves"] },
+  { words: ["I", "have", "never", "been", "to", "Kyoto", "."], jp: "私は京都に行ったことがありません。", decoys: ["went", "has"] }
+];
+
+// ---- DOM参照 ----
+const answerArea = document.getElementById("answerArea");
+const wordBank = document.getElementById("wordBank");
+const progressEl = document.getElementById("progress");
+const scoreEl = document.getElementById("score");
+const timerEl = document.getElementById("timer");
+const jpHint = document.getElementById("jpHint");
+const feedback = document.getElementById("feedback");
+const submitBtn = document.getElementById("submitBtn");
+const attemptsEl = document.getElementById("attemptsEl");
+const nextBtn = document.getElementById("nextBtn");
+const hintBtn = document.getElementById("hintBtn");
+const levelSelect = document.getElementById("levelSelect");
+const countSelect = document.getElementById("countSelect");
+const startBtn = document.getElementById("startBtn");
+const startPanel = document.getElementById("startPanel");
+const gamePanel = document.getElementById("gamePanel");
+const finishPanel = document.getElementById("finishPanel");
+const finishTitle = document.getElementById("finishTitle");
+const finishScore = document.getElementById("finishScore");
+const finishTime = document.getElementById("finishTime");
+const reviewBtn = document.getElementById("reviewBtn");
+const weakReviewBtn = document.getElementById("weakReviewBtn");
+const restartBtn = document.getElementById("restartBtn");
+const fileInput = document.getElementById("fileInput");
+const fileStatus = document.getElementById("fileStatus");
+
+// ---- セッション状態 ----
+let sessionQuestions = [];  // 今回のプレイで出題する問題（シャッフル済み）
+let wrongQuestions = [];    // 今回のプレイで新たに間違えた問題（今回のみ・永続化はしない）
+let currentIndex = 0;
+let score = 0;
+let correctCount = 0;  // 正解した問題数（得点=scoreとは別に集計）
+let currentWords = [];
+let answerWords = [];
+let isReviewMode = false;
+let attempts = 0;              // 現在の問題での挑戦回数
+const MAX_ATTEMPTS = 3;        // 最大挑戦回数（3回失敗で答えを表示）
+
+// ---- タイムアタック（制限時間なし・経過時間の計測のみ） ----
+let startTime = null;
+let timerInterval = null;
+
+function formatElapsed(ms){
+  const totalSec = Math.floor(ms / 1000);
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  return `${m}:${String(s).padStart(2, "0")}`;
+}
+function startTimer(){
+  startTime = Date.now();
+  timerEl.textContent = "⏱ 0:00";
+  if(timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    timerEl.textContent = "⏱ " + formatElapsed(Date.now() - startTime);
+  }, 1000);
+}
+function stopTimer(){
+  if(timerInterval) clearInterval(timerInterval);
+  return startTime ? Date.now() - startTime : 0;
+}
+
+/* ==========================================================
+   xlsx / csv 読み込み処理
+   フォーマット（1行目は見出し行として無視されます）：
+   A列＝日本語訳／B列以降＝正しい語順の単語（1セルに1単語）
+   ／見出しに「おとり」を含む列＝おとり単語（レベル2用）
+   ========================================================== */
+function parseRowsToQuestions(rows){
+  const result = [];
+  if(rows.length === 0) return result;
+
+  const header = (rows[0] || []).map(c => (c === undefined || c === null) ? "" : String(c).trim());
+  let decoyColIdx = header.findIndex(h => h.includes("おとり"));
+  if(decoyColIdx === -1){
+    decoyColIdx = Math.max(header.length - 1, 1);
+  }
+
+  for(let r = 1; r < rows.length; r++){
+    const row = rows[r] || [];
+    const cells = row.map(c => (c === undefined || c === null) ? "" : String(c).trim());
+    if(cells.length === 0 || !cells[0]) continue;
+
+    const jp = cells[0];
+    const decoy = cells[decoyColIdx] || "";
+    const words = cells.slice(1, decoyColIdx).filter(w => w !== "");
+    if(words.length === 0) continue;
+
+    result.push({ jp, words, decoys: decoy ? [decoy] : [] });
+  }
+  return result;
+}
+
+function applyNewQuestions(newQuestions, sourceLabel){
+  if(newQuestions.length === 0){
+    fileStatus.textContent = "問題を読み取れませんでした。フォーマットを確認してください。";
+    fileStatus.className = "file-status error";
+    return false;
+  }
+  QUESTIONS.length = 0;
+  newQuestions.forEach(q => QUESTIONS.push(q));
+
+  fileStatus.textContent = `${sourceLabel} ${QUESTIONS.length} 問を読み込みました。`;
+  fileStatus.className = "file-status ok";
+
+  populateCountOptions();
+  refreshWeakReviewButton();
+  showStartPanel();
+  return true;
+}
+
+fileInput.addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (evt) => {
+    try{
+      const data = new Uint8Array(evt.target.result);
+      const workbook = XLSX.read(data, { type: "array" });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
+      applyNewQuestions(parseRowsToQuestions(rows), `「${file.name}」から`);
+    }catch(err){
+      fileStatus.textContent = "読み込みエラー：ファイル形式を確認してください。";
+      fileStatus.className = "file-status error";
+      console.error(err);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+});
+
+/* ==========================================================
+   自動読み込み（GitHub Pages 等で公開する場合）
+   同じフォルダに置いた questions.csv を起動時に自動取得します。
+   ========================================================== */
+const CSV_URL = "questions_grade2.csv";
+
+/* ==========================================================
+   苦手問題（間違えた問題）の永続化
+   ブラウザの localStorage に保存し、タブを閉じても次回開いた
+   ときに残るようにします。CSV_URL ごとにキーを分けているので、
+   学年別にHTMLを分けていても混ざりません。
+   識別には各問題の「日本語訳（jp）」を使っています。
+   ========================================================== */
+const WEAK_STORAGE_KEY = "weakList_" + CSV_URL;
+
+function loadWeakJpList(){
+  try{
+    const raw = localStorage.getItem(WEAK_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  }catch(err){
+    return [];
+  }
+}
+function saveWeakJpList(jpList){
+  try{
+    localStorage.setItem(WEAK_STORAGE_KEY, JSON.stringify(jpList));
+  }catch(err){
+    // localStorageが使えない環境（プライベートモード等）では何もしない
+  }
+}
+function addToWeakList(q){
+  const jpList = loadWeakJpList();
+  if(!jpList.includes(q.jp)){
+    jpList.push(q.jp);
+    saveWeakJpList(jpList);
+  }
+}
+function removeFromWeakList(q){
+  const jpList = loadWeakJpList();
+  const idx = jpList.indexOf(q.jp);
+  if(idx !== -1){
+    jpList.splice(idx, 1);
+    saveWeakJpList(jpList);
+  }
+}
+function getWeakQuestions(){
+  const jpList = loadWeakJpList();
+  return QUESTIONS.filter(q => jpList.includes(q.jp));
+}
+function refreshWeakReviewButton(){
+  const weakQs = getWeakQuestions();
+  if(weakQs.length > 0){
+    weakReviewBtn.style.display = "inline-block";
+    weakReviewBtn.textContent = `苦手問題を復習する（${weakQs.length}問）`;
+  } else {
+    weakReviewBtn.style.display = "none";
+  }
+}
+
+async function autoLoadFromCSV(){
+  try{
+    const res = await fetch(CSV_URL, { cache: "no-store" });
+    if(!res.ok) throw new Error("not found");
+    const text = await res.text();
+    const workbook = XLSX.read(text, { type: "string" });
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
+    const newQuestions = parseRowsToQuestions(rows);
+    if(newQuestions.length > 0){
+      QUESTIONS.length = 0;
+      newQuestions.forEach(q => QUESTIONS.push(q));
+      fileStatus.textContent = `${CSV_URL} から ${QUESTIONS.length} 問を自動読み込みしました。`;
+      fileStatus.className = "file-status ok";
+    } else {
+      throw new Error("empty");
+    }
+  }catch(err){
+    fileStatus.textContent = `現在：サンプル問題（${QUESTIONS.length}問）を使用中（${CSV_URL}が見つかりません）`;
+  }
+  populateCountOptions();
+  refreshWeakReviewButton();
+  showStartPanel();
+}
+
+// ---- 出題数セレクトの中身を作る ----
+function populateCountOptions(){
+  const total = QUESTIONS.length;
+  const options = [5, 10, 20, 30].filter(n => n < total);
+  countSelect.innerHTML = "";
+  options.forEach(n => {
+    const opt = document.createElement("option");
+    opt.value = n;
+    opt.textContent = `${n}問`;
+    countSelect.appendChild(opt);
+  });
+  const allOpt = document.createElement("option");
+  allOpt.value = total;
+  allOpt.textContent = `全問（${total}問）`;
+  countSelect.appendChild(allOpt);
+  // デフォルトは10問前後を選択（無ければ全問）
+  const preferred = options.includes(10) ? 10 : (options.length ? options[options.length - 1] : total);
+  countSelect.value = preferred;
+}
+
+function shuffle(arr){
+  const a = [...arr];
+  for(let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// ---- 画面切り替え ----
+function showStartPanel(){
+  startPanel.style.display = "block";
+  gamePanel.style.display = "none";
+  finishPanel.style.display = "none";
+  refreshWeakReviewButton();
+}
+
+startBtn.onclick = () => {
+  const count = Math.min(parseInt(countSelect.value, 10) || QUESTIONS.length, QUESTIONS.length);
+  sessionQuestions = shuffle(QUESTIONS).slice(0, count);
+  wrongQuestions = [];
+  isReviewMode = false;
+  beginSession();
+};
+
+reviewBtn.onclick = () => {
+  sessionQuestions = shuffle(wrongQuestions);
+  wrongQuestions = [];
+  isReviewMode = true;
+  beginSession();
+};
+
+weakReviewBtn.onclick = () => {
+  const weakQs = getWeakQuestions();
+  if(weakQs.length === 0) return;
+  sessionQuestions = shuffle(weakQs);
+  wrongQuestions = [];
+  isReviewMode = true;
+  beginSession();
+};
+
+restartBtn.onclick = () => {
+  showStartPanel();
+};
+
+function beginSession(){
+  currentIndex = 0;
+  score = 0;
+  correctCount = 0;
+  startPanel.style.display = "none";
+  finishPanel.style.display = "none";
+  gamePanel.style.display = "block";
+  timerEl.style.display = isReviewMode ? "none" : "inline-block";
+  if(!isReviewMode){
+    startTimer();
+  }
+  loadQuestion();
+}
+
+function loadQuestion(){
+  const q = sessionQuestions[currentIndex];
+  const level = levelSelect.value;
+  answerWords = [];
+  attempts = 0;
+  feedback.textContent = "";
+  feedback.className = "feedback";
+  answerArea.className = "answer-area";
+  jpHint.textContent = "";
+  submitBtn.style.display = "inline-block";
+  submitBtn.disabled = false;
+  nextBtn.style.display = "none";
+  attemptsEl.textContent = `残り挑戦回数: ${MAX_ATTEMPTS}回`;
+
+  let pool = [...q.words];
+  if(level === "2" && q.decoys && q.decoys.length){
+    pool = pool.concat(q.decoys);
+  }
+  currentWords = shuffle(pool);
+
+  const label = isReviewMode ? "復習" : "問題";
+  progressEl.textContent = `${label} ${currentIndex + 1} / ${sessionQuestions.length}`;
+  scoreEl.textContent = `正解: ${score}`;
+
+  renderBank();
+  renderAnswer();
+}
+
+function renderBank(){
+  wordBank.innerHTML = "";
+  currentWords.forEach((word, idx) => {
+    const btn = document.createElement("button");
+    btn.className = "word-btn";
+    btn.textContent = word;
+    btn.onclick = () => moveToAnswer(idx);
+    wordBank.appendChild(btn);
+  });
+}
+
+function renderAnswer(){
+  answerArea.innerHTML = "";
+  answerWords.forEach((word, idx) => {
+    const span = document.createElement("span");
+    span.className = "answer-word";
+    span.textContent = word;
+    span.onclick = () => moveToBank(idx);
+    answerArea.appendChild(span);
+  });
+}
+
+function moveToAnswer(bankIdx){
+  answerWords.push(currentWords[bankIdx]);
+  currentWords.splice(bankIdx, 1);
+  renderBank();
+  renderAnswer();
+}
+
+function moveToBank(answerIdx){
+  if(submitBtn.disabled) return;
+  currentWords.push(answerWords[answerIdx]);
+  answerWords.splice(answerIdx, 1);
+  renderBank();
+  renderAnswer();
+}
+
+function checkAnswer(){
+  const q = sessionQuestions[currentIndex];
+  const correct = JSON.stringify(answerWords) === JSON.stringify(q.words);
+  attempts++;
+
+  if(correct){
+    // 正解：ノーミス（1回目で正解）なら2点、ミスがあれば1点
+    submitBtn.disabled = true;
+    submitBtn.style.display = "none";
+    answerArea.className = "answer-area correct";
+    attemptsEl.textContent = "";
+
+    const noMistake = (attempts === 1);
+    const gained = noMistake ? 2 : 1;
+    score += gained;
+    correctCount++;
+    scoreEl.textContent = `正解: ${score}`;
+    if(noMistake){
+      removeFromWeakList(q); // ノーミスで解けたので苦手リストから外す
+    }
+    // ミスをしてからの正解は「まだ苦手」とみなし、苦手リストに残す
+
+    feedback.textContent = noMistake
+      ? `正解！ノーミスボーナス +${gained}点！`
+      : `正解！ +${gained}点`;
+    feedback.className = "feedback correct";
+    nextBtn.style.display = "inline-block";
+    return;
+  }
+
+  // 不正解の場合：1回目のミスの時点で苦手リストに登録する
+  addToWeakList(q);
+
+  if(attempts >= MAX_ATTEMPTS){
+    // 規定回数失敗：答えを表示して次へ（今回の復習リストにも追加）
+    submitBtn.disabled = true;
+    submitBtn.style.display = "none";
+    answerArea.className = "answer-area wrong";
+    attemptsEl.textContent = "";
+    feedback.textContent = `残念…正解は「${q.words.join(" ")}」`;
+    feedback.className = "feedback wrong";
+    score += 1;
+    scoreEl.textContent = `正解: ${score}`;
+    if(!wrongQuestions.includes(q)){
+      wrongQuestions.push(q);
+    }
+    nextBtn.style.display = "inline-block";
+  } else {
+    // まだ挑戦できる：答えは見せず、単語を戻して再挑戦させる
+    const remaining = MAX_ATTEMPTS - attempts;
+    answerArea.className = "answer-area wrong";
+    feedback.textContent = "残念！不正解…もう一度挑戦しよう";
+    feedback.className = "feedback wrong";
+    attemptsEl.textContent = `残り挑戦回数: ${remaining}回`;
+
+    submitBtn.disabled = true;
+    setTimeout(() => {
+      currentWords = shuffle([...currentWords, ...answerWords]);
+      answerWords = [];
+      renderBank();
+      renderAnswer();
+      answerArea.className = "answer-area";
+      feedback.textContent = "";
+      submitBtn.disabled = false;
+    }, 900);
+  }
+}
+
+function nextQuestion(){
+  currentIndex++;
+  if(currentIndex >= sessionQuestions.length){
+    finishSession();
+  } else {
+    loadQuestion();
+  }
+}
+
+function finishSession(){
+  let elapsedMs = 0;
+  if(!isReviewMode){
+    elapsedMs = stopTimer();
+  }
+  gamePanel.style.display = "none";
+  finishPanel.style.display = "block";
+
+  finishTitle.textContent = isReviewMode ? "復習おつかれさま！" : "お疲れさま！";
+  finishScore.textContent = `${sessionQuestions.length}問中 ${correctCount}問正解、${score}点でした！`;
+
+  if(!isReviewMode){
+    finishTime.textContent = `タイム: ${formatElapsed(elapsedMs)}`;
+    finishTime.style.display = "block";
+  } else {
+    finishTime.style.display = "none";
+  }
+
+  if(wrongQuestions.length > 0){
+    reviewBtn.style.display = "inline-block";
+    reviewBtn.textContent = `間違えた問題を復習する（${wrongQuestions.length}問）`;
+  } else {
+    reviewBtn.style.display = "none";
+  }
+}
+
+hintBtn.onclick = () => {
+  jpHint.textContent = sessionQuestions[currentIndex].jp;
+};
+submitBtn.onclick = checkAnswer;
+nextBtn.onclick = nextQuestion;
+
+autoLoadFromCSV();
+</script>
+</body>
+</html>
