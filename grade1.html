@@ -7,536 +7,305 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root{
-    --main:#3478c5;
-    --main-dark:#24558f;
-    --accent:#f5b84b;
-    --accent-dark:#d89a27;
-    --correct:#43a86b;
-    --wrong:#dc6b63;
-    --bg:#edf4fb;
-    --card:#ffffff;
-    --text:#26364d;
-    --sub:#718096;
-    --border:#d7e3f0;
+    --main: #2f5fa8;
+    --main-dark: #1f3f75;
+    --accent: #ffb347;
+    --correct: #3fae5b;
+    --wrong: #e0524a;
+    --bg: #eef2f8;
+    --card: #ffffff;
   }
-
-  *{
-    box-sizing:border-box;
-  }
-
+  *{box-sizing:border-box;}
   body{
     margin:0;
-    font-family:
-      "Segoe UI",
-      "Hiragino Kaku Gothic ProN",
-      "Yu Gothic",
-      "Noto Sans JP",
-      Arial,
-      sans-serif;
-    background:
-      linear-gradient(135deg,#edf4fb 0%,#f8fbfe 55%,#eef6f2 100%);
-    color:var(--text);
+    font-family:"Segoe UI","Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",Arial,sans-serif;
+    background:linear-gradient(180deg,#eef2f8 0%,#dbe4f3 100%);
     min-height:100vh;
     display:flex;
     align-items:flex-start;
     justify-content:center;
-    padding:28px 14px;
+    padding:24px 12px;
   }
-
   .wrap{
     width:100%;
     max-width:720px;
   }
-
-  /* ===== タイトル ===== */
-
   h1{
     text-align:center;
     color:var(--main-dark);
-    font-size:1.7rem;
-    margin:4px 0 5px;
-    letter-spacing:.04em;
-    font-weight:800;
+    font-size:1.5rem;
+    margin-bottom:4px;
   }
-
   .sub{
     text-align:center;
-    color:var(--sub);
-    font-size:.88rem;
-    margin-bottom:20px;
+    color:#5a6b8c;
+    font-size:0.85rem;
+    margin-bottom:18px;
   }
-
-  /* ===== 共通パネル ===== */
-
   .panel{
     background:var(--card);
-    border:1px solid rgba(52,120,197,.10);
-    border-radius:18px;
-    padding:22px;
-    box-shadow:
-      0 5px 18px rgba(36,85,143,.09),
-      0 1px 3px rgba(36,85,143,.05);
+    border-radius:16px;
+    padding:20px;
+    box-shadow:0 6px 20px rgba(31,63,117,0.12);
     margin-bottom:16px;
   }
-
-  /* ===== ファイル情報 ===== */
-
-  .file-panel{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    flex-wrap:wrap;
-    background:#f6f9fc;
-    border:1px solid var(--border);
-    border-radius:12px;
-    padding:10px 14px;
-    margin-bottom:16px;
-    font-size:.82rem;
-    color:#5c6d82;
-  }
-
-  .file-panel label.file-btn{
-    background:var(--main);
-    color:#fff;
-    padding:8px 14px;
-    border-radius:9px;
-    cursor:pointer;
-    font-weight:bold;
-    white-space:nowrap;
-  }
-
-  .file-panel input[type="file"]{
-    display:none;
-  }
-
-  .file-status{
-    flex:1;
-    min-width:150px;
-  }
-
-  .file-status.error{
-    color:var(--wrong);
-    font-weight:bold;
-  }
-
-  .file-status.ok{
-    color:var(--correct);
-    font-weight:bold;
-  }
-
-  /* ===== スタート画面 ===== */
-
-  .start-panel{
-    text-align:center;
-    padding:28px 22px 26px;
-  }
-
-  .start-panel h2{
-    color:var(--main-dark);
-    margin:0 0 20px;
-    font-size:1.25rem;
-    font-weight:800;
-  }
-
-  .start-options{
-    display:flex;
-    justify-content:center;
-    gap:28px;
-    flex-wrap:wrap;
-    margin:4px 0 24px;
-  }
-
-  .start-options .opt{
-    display:flex;
-    flex-direction:column;
-    gap:7px;
-    align-items:center;
-    font-size:.84rem;
-    color:#617086;
-    font-weight:600;
-  }
-
-  .start-options select{
-    padding:9px 30px 9px 12px;
-    border-radius:10px;
-    border:1px solid #cbd9e8;
-    background:#fff;
-    color:var(--text);
-    font-size:.93rem;
-    cursor:pointer;
-  }
-
-  .start-options select:focus{
-    outline:2px solid rgba(52,120,197,.20);
-    border-color:var(--main);
-  }
-
-  .start-btn{
-    padding:13px 38px;
-    border-radius:13px;
-    border:none;
-    background:var(--main);
-    color:#fff;
-    font-size:1.08rem;
-    font-weight:800;
-    cursor:pointer;
-    box-shadow:0 4px 0 var(--main-dark);
-    transition:.12s ease;
-  }
-
-  .start-btn:hover{
-    transform:translateY(-1px);
-    box-shadow:0 5px 0 var(--main-dark);
-  }
-
-  .start-btn:active{
-    transform:translateY(2px);
-    box-shadow:0 2px 0 var(--main-dark);
-  }
-
-  /* ===== ゲーム上部 ===== */
-
   .top-bar{
     display:flex;
     justify-content:space-between;
     align-items:center;
     flex-wrap:wrap;
-    gap:8px;
-    margin-bottom:15px;
-    padding-bottom:13px;
-    border-bottom:1px solid #e5edf5;
+    gap:10px;
+    margin-bottom:16px;
   }
-
   .progress{
-    font-weight:800;
+    font-weight:bold;
     color:var(--main-dark);
-    font-size:.94rem;
+    font-size:0.95rem;
   }
-
   .score{
     color:var(--main);
-    font-size:.94rem;
-    font-weight:700;
+    font-size:0.95rem;
   }
-
   .timer{
-    color:#8a671e;
-    background:#fff6d9;
-    border:1px solid #f0d98d;
-    border-radius:20px;
-    padding:5px 12px;
-    font-weight:800;
-    font-size:.88rem;
+    color:var(--accent);
+    background:#fff4e2;
+    border-radius:8px;
+    padding:3px 10px;
+    font-weight:bold;
+    font-size:0.9rem;
     font-variant-numeric:tabular-nums;
   }
-
-  /* ===== レベル選択（ゲーム画面用） ===== */
-
   .level-select{
     display:flex;
     gap:8px;
     align-items:center;
-    font-size:.85rem;
-    color:#555;
+    font-size:0.85rem;
+    color:#444;
   }
-
   .level-select select{
     padding:4px 8px;
     border-radius:8px;
     border:1px solid #ccc;
-    font-size:.85rem;
+    font-size:0.85rem;
   }
-
-  /* ===== 日本語ヒント ===== */
-
   .jp-hint{
     text-align:center;
-    color:#78879a;
-    font-size:.94rem;
+    color:#888;
+    font-size:0.95rem;
     min-height:1.3em;
-    margin:4px 0 12px;
+    margin-bottom:10px;
   }
-
-  /* ===== 回答エリア ===== */
-
   .answer-area{
-    min-height:70px;
-    border:2px dashed #bfd0e3;
-    border-radius:14px;
-    padding:12px;
+    min-height:64px;
+    border:2px dashed #b7c4de;
+    border-radius:12px;
+    padding:10px;
     display:flex;
     flex-wrap:wrap;
     gap:8px;
     align-items:center;
     margin-bottom:18px;
-    background:#f8fbfe;
-    transition:border-color .2s,background .2s;
+    background:#f7f9fd;
+    transition:border-color 0.2s, background 0.2s;
   }
-
   .answer-area.correct{
     border-color:var(--correct);
-    background:#edf9f1;
+    background:#eafaf0;
   }
-
   .answer-area.wrong{
     border-color:var(--wrong);
-    background:#fff1ef;
+    background:#fdeceb;
   }
-
-  /* ===== 単語ボタン ===== */
-
   .word-bank{
     display:flex;
     flex-wrap:wrap;
-    gap:9px;
+    gap:8px;
     justify-content:center;
-    min-height:55px;
+    min-height:52px;
     margin-bottom:18px;
   }
-
   .word-btn{
-    padding:10px 17px;
-    border-radius:11px;
-    border:1px solid #2868ad;
+    padding:11px 18px;
+    border-radius:10px;
+    border:none;
     background:var(--main);
     color:#fff;
-    font-size:1.05rem;
+    font-size:1.1rem;
     font-weight:700;
-    letter-spacing:.01em;
+    letter-spacing:0.02em;
     cursor:pointer;
     box-shadow:0 3px 0 var(--main-dark);
-    transition:
-      transform .08s,
-      box-shadow .08s,
-      background .12s;
+    transition:transform 0.08s;
     user-select:none;
   }
-
-  .word-btn:hover{
-    background:#4385ca;
-    transform:translateY(-1px);
-  }
-
   .word-btn:active{
     transform:translateY(2px);
     box-shadow:0 1px 0 var(--main-dark);
   }
-
-  /* ===== 選択した単語 ===== */
-
   .answer-word{
-    padding:10px 17px;
-    border-radius:11px;
-    background:#fff0c9;
-    border:1px solid #edcf82;
-    color:#74551a;
-    font-size:1.05rem;
+    padding:11px 18px;
+    border-radius:10px;
+    background:var(--accent);
+    color:#5a3a00;
+    font-size:1.1rem;
     font-weight:700;
-    letter-spacing:.01em;
+    letter-spacing:0.02em;
     cursor:pointer;
-    box-shadow:0 2px 0 #d8b65e;
+    box-shadow:0 3px 0 #c98a1f;
     user-select:none;
   }
-
-  .answer-word:hover{
-    background:#ffe9ae;
-  }
-
-  /* ===== ボタン ===== */
-
   .btn-row{
     display:flex;
-    gap:9px;
+    gap:10px;
     justify-content:center;
     flex-wrap:wrap;
   }
-
   button.action{
-    padding:10px 19px;
-    border-radius:11px;
+    padding:10px 20px;
+    border-radius:10px;
     border:none;
-    font-size:.92rem;
+    font-size:0.95rem;
     cursor:pointer;
-    font-weight:700;
-    transition:.12s ease;
+    font-weight:bold;
   }
-
-  button.action:hover{
-    transform:translateY(-1px);
-  }
-
   .btn-submit{
     background:var(--main);
     color:#fff;
-    box-shadow:0 3px 0 var(--main-dark);
   }
-
-  .btn-submit:active{
-    transform:translateY(2px);
-    box-shadow:0 1px 0 var(--main-dark);
-  }
-
   .btn-hint{
     background:#fff;
     color:var(--main);
-    border:1px solid var(--main) !important;
+    border:2px solid var(--main) !important;
   }
-
-  .btn-hint:hover{
-    background:#f1f7fd;
-  }
-
   .btn-next{
     background:var(--correct);
     color:#fff;
-    box-shadow:0 3px 0 #318152;
+    display:none;
   }
-
-  /* ===== 挑戦回数 ===== */
-
   .attempts{
     text-align:center;
     color:var(--wrong);
-    font-weight:700;
-    font-size:.86rem;
-    margin-bottom:9px;
+    font-weight:bold;
+    font-size:0.9rem;
+    margin-bottom:10px;
   }
-
-  /* ===== フィードバック ===== */
-
   .feedback{
     text-align:center;
-    font-weight:800;
+    font-weight:bold;
     min-height:1.4em;
     margin-top:14px;
-    font-size:.98rem;
+    font-size:1rem;
   }
-
-  .feedback.correct{
-    color:var(--correct);
-  }
-
-  .feedback.wrong{
-    color:var(--wrong);
-  }
-
-  /* ===== 終了画面 ===== */
-
+  .feedback.correct{color:var(--correct);}
+  .feedback.wrong{color:var(--wrong);}
   .finish{
     text-align:center;
-    padding:32px 20px;
+    padding:30px 10px;
   }
-
-  .finish h2{
-    color:var(--main-dark);
-    margin-top:0;
-    font-size:1.35rem;
-  }
-
+  .finish h2{color:var(--main-dark);}
   .finish .finish-time{
     color:var(--main);
-    font-size:1.05rem;
-    font-weight:800;
-    margin:7px 0 18px;
+    font-size:1.1rem;
+    font-weight:bold;
+    margin:6px 0 16px;
   }
-
   .finish-btns{
     display:flex;
     gap:10px;
     justify-content:center;
     flex-wrap:wrap;
   }
-
   .finish-btns button{
-    padding:11px 21px;
-    border-radius:11px;
+    padding:12px 22px;
+    border-radius:10px;
     border:none;
-    font-size:.95rem;
+    font-size:1rem;
     cursor:pointer;
-    font-weight:700;
-    transition:.12s ease;
+    font-weight:bold;
   }
-
-  .finish-btns button:hover{
-    transform:translateY(-1px);
-  }
-
   .btn-restart{
     background:var(--main);
     color:#fff;
-    box-shadow:0 3px 0 var(--main-dark);
   }
-
   .btn-review{
-    background:#fff1cf;
-    border:1px solid #e6c76d !important;
-    color:#765817;
+    background:var(--accent);
+    color:#5a3a00;
     display:none;
   }
+  .file-panel{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+    background:#f2f5fb;
+    border-radius:12px;
+    padding:12px 14px;
+    margin-bottom:16px;
+    font-size:0.85rem;
+    color:#3a4a68;
+  }
+  .file-panel label.file-btn{
+    background:var(--main);
+    color:#fff;
+    padding:8px 14px;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:bold;
+    white-space:nowrap;
+  }
+  .file-panel input[type="file"]{
+    display:none;
+  }
+  .file-status{
+    flex:1;
+    min-width:150px;
+  }
+  .file-status.error{ color:var(--wrong); font-weight:bold; }
+  .file-status.ok{ color:var(--correct); font-weight:bold; }
 
-  /* ===== スマホ対応 ===== */
-
-  @media(max-width:520px){
-
-    body{
-      padding:18px 10px;
-    }
-
-    h1{
-      font-size:1.4rem;
-    }
-
-    .sub{
-      font-size:.8rem;
-      margin-bottom:15px;
-    }
-
-    .panel{
-      padding:17px 13px;
-      border-radius:15px;
-    }
-
-    .start-panel{
-      padding:23px 15px;
-    }
-
-    .start-options{
-      gap:15px;
-      flex-direction:column;
-      align-items:center;
-    }
-
-    .start-options .opt{
-      width:100%;
-    }
-
-    .start-options select{
-      width:210px;
-    }
-
-    .start-btn{
-      width:90%;
-      max-width:300px;
-    }
-
-    .top-bar{
-      justify-content:center;
-    }
-
-    .word-btn,
-    .answer-word{
-      font-size:1rem;
-      padding:9px 14px;
-    }
-
-    .answer-area{
-      min-height:65px;
-      padding:10px;
-    }
-
-    button.action{
-      padding:9px 15px;
-    }
+  .start-panel{
+    text-align:center;
+  }
+  .start-panel h2{
+    color:var(--main-dark);
+    margin-top:0;
+    font-size:1.15rem;
+  }
+  .start-options{
+    display:flex;
+    justify-content:center;
+    gap:24px;
+    flex-wrap:wrap;
+    margin:18px 0 22px;
+  }
+  .start-options .opt{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    align-items:center;
+    font-size:0.85rem;
+    color:#444;
+  }
+  .start-options select{
+    padding:8px 12px;
+    border-radius:8px;
+    border:1px solid #ccc;
+    font-size:0.95rem;
+  }
+  .start-btn{
+    padding:14px 34px;
+    border-radius:12px;
+    border:none;
+    background:var(--main);
+    color:#fff;
+    font-size:1.05rem;
+    font-weight:bold;
+    cursor:pointer;
+    box-shadow:0 4px 0 var(--main-dark);
+  }
+  .start-btn:active{
+    transform:translateY(2px);
+    box-shadow:0 2px 0 var(--main-dark);
   }
 </style>
 </head>
@@ -566,6 +335,13 @@
         <select id="levelSelect">
           <option value="1">レベル1（おとりなし）</option>
           <option value="2">レベル2（おとりあり）</option>
+        </select>
+      </div>
+      <div class="opt">
+        日本語訳
+        <select id="jpModeSelect">
+          <option value="hint">ヒントボタンで表示</option>
+          <option value="always">最初から表示</option>
         </select>
       </div>
     </div>
@@ -641,6 +417,7 @@ const attemptsEl = document.getElementById("attemptsEl");
 const nextBtn = document.getElementById("nextBtn");
 const hintBtn = document.getElementById("hintBtn");
 const levelSelect = document.getElementById("levelSelect");
+const jpModeSelect = document.getElementById("jpModeSelect");
 const countSelect = document.getElementById("countSelect");
 const startBtn = document.getElementById("startBtn");
 const startPanel = document.getElementById("startPanel");
@@ -926,12 +703,14 @@ function beginSession(){
 function loadQuestion(){
   const q = sessionQuestions[currentIndex];
   const level = levelSelect.value;
+  const jpAlwaysOn = (jpModeSelect.value === "always");
   answerWords = [];
   attempts = 0;
   feedback.textContent = "";
   feedback.className = "feedback";
   answerArea.className = "answer-area";
-  jpHint.textContent = "";
+  jpHint.textContent = jpAlwaysOn ? q.jp : "";
+  hintBtn.style.display = jpAlwaysOn ? "none" : "inline-block";
   submitBtn.style.display = "inline-block";
   submitBtn.disabled = false;
   nextBtn.style.display = "none";

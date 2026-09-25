@@ -337,6 +337,13 @@
           <option value="2">レベル2（おとりあり）</option>
         </select>
       </div>
+      <div class="opt">
+        日本語訳
+        <select id="jpModeSelect">
+          <option value="hint">ヒントボタンで表示</option>
+          <option value="always">最初から表示</option>
+        </select>
+      </div>
     </div>
     <button class="start-btn" id="startBtn">スタート！</button>
     <div>
@@ -410,6 +417,7 @@ const attemptsEl = document.getElementById("attemptsEl");
 const nextBtn = document.getElementById("nextBtn");
 const hintBtn = document.getElementById("hintBtn");
 const levelSelect = document.getElementById("levelSelect");
+const jpModeSelect = document.getElementById("jpModeSelect");
 const countSelect = document.getElementById("countSelect");
 const startBtn = document.getElementById("startBtn");
 const startPanel = document.getElementById("startPanel");
@@ -695,12 +703,14 @@ function beginSession(){
 function loadQuestion(){
   const q = sessionQuestions[currentIndex];
   const level = levelSelect.value;
+  const jpAlwaysOn = (jpModeSelect.value === "always");
   answerWords = [];
   attempts = 0;
   feedback.textContent = "";
   feedback.className = "feedback";
   answerArea.className = "answer-area";
-  jpHint.textContent = "";
+  jpHint.textContent = jpAlwaysOn ? q.jp : "";
+  hintBtn.style.display = jpAlwaysOn ? "none" : "inline-block";
   submitBtn.style.display = "inline-block";
   submitBtn.disabled = false;
   nextBtn.style.display = "none";
