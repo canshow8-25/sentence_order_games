@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>英文並び替えゲーム Lesson選択版</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+:root{--ink:#2b2d42;--indigo:#4f46e5;--coral:#ff6b6b;--mint:#2bb98b;--bg:#f4f5ff;--card:#fff;--line:#d9dcf5}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Meiryo",sans-serif;background:var(--bg);color:var(--ink)}
+.wrap{max-width:760px;margin:0 auto;padding:16px}
+h1{font-size:1.5rem;margin:8px 0 4px;color:var(--indigo)}
+.sub{color:#666;font-size:.9rem;margin-bottom:12px}
+.card{background:var(--card);border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:0 2px 8px rgba(79,70,229,.08)}
+.card h2{font-size:1.05rem;margin:0 0 10px}
+.row{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:2px solid var(--line);background:#fff;border-radius:12px;padding:10px 14px;font-size:1rem;cursor:pointer;min-height:44px;font-family:inherit;color:var(--ink)}
+.chip.on{background:var(--indigo);border-color:var(--indigo);color:#fff}
+.chip small{opacity:.75;margin-left:4px}
+.btn{border:none;border-radius:14px;padding:12px 22px;font-size:1.05rem;font-weight:700;cursor:pointer;min-height:48px;font-family:inherit}
+.btn.primary{background:var(--indigo);color:#fff;border-bottom:4px solid #3730a3}
+.btn.go{background:var(--mint);color:#fff;border-bottom:4px solid #1c8f6b}
+.btn.sub2{background:#fff;color:var(--ink);border:2px solid var(--line)}
+.btn.warn{background:var(--coral);color:#fff;border-bottom:4px solid #d94c4c}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.info{font-size:.95rem;margin-top:10px}
+.total{font-weight:700;color:var(--indigo)}
+.err{color:#c0392b;font-size:.9rem;margin-top:8px}
+.hidden{display:none}
+.bar{height:10px;background:var(--line);border-radius:6px;overflow:hidden;margin:6px 0 12px}
+.bar>i{display:block;height:100%;background:var(--mint);width:0}
+.top{display:flex;justify-content:space-between;font-size:.9rem;color:#555}
+.jp{font-size:1.25rem;font-weight:700;margin:6px 0 14px}
+.slot{min-height:64px;border:2px dashed var(--line);border-radius:14px;padding:8px;display:flex;flex-wrap:wrap;gap:8px;background:#fafaff}
+.bank{margin-top:14px;display:flex;flex-wrap:wrap;gap:8px;min-height:56px}
+.tile{background:#fff;border:2px solid var(--indigo);border-bottom:5px solid var(--indigo);border-radius:10px;padding:8px 14px;font-size:1.1rem;font-weight:700;cursor:pointer;font-family:"Fredoka",inherit;color:var(--ink);min-height:44px}
+.tile:active{transform:translateY(2px)}
+.tile.used{visibility:hidden}
+.slot.shake{animation:sh .35s}
+@keyframes sh{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.fb{margin-top:12px;font-weight:700;min-height:1.5em}
+.fb.ok{color:var(--mint)}.fb.ng{color:var(--coral)}
+.note{font-size:.9rem;color:#555;margin-top:4px}
+.ctl{margin-top:12px;display:flex;gap:8px;flex-wrap:wrap}
+.score{font-size:2rem;font-weight:800;color:var(--indigo)}
+ul.miss{padding-left:18px;margin:8px 0}
+ul.miss li{margin-bottom:6px}
+.toggle{display:flex;align-items:center;gap:8px;font-size:1rem}
+.toggle input{width:22px;height:22px}
+.src{font-size:.8rem;color:#777;margin-top:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- スタート画面 -->
+<div id="startView">
+  <h1>英文並び替えゲーム</h1>
+  <div class="sub">Lessonと問題数を選んでスタート!</div>
+
+  <div class="card">
+    <h2>① Lessonを選ぶ(複数OK)</h2>
+    <div class="row" style="margin-bottom:10px">
+      <button class="chip" id="selAll">すべて選択</button>
+      <button class="chip" id="selNone">すべて解除</button>
+    </div>
+    <div class="row" id="lessonBox"></div>
+    <div class="info">選択中の合計:<span class="total" id="totalCount">0</span>問</div>
+  </div>
+
+  <div class="card">
+    <h2>② 何問解く?</h2>
+    <div class="row" id="countBox">
+      <button class="chip" data-n="5">5問</button>
+      <button class="chip" data-n="10">10問</button>
+      <button class="chip" data-n="all">全問</button>
+    </div>
+    <div class="info" id="countInfo"></div>
+  </div>
+
+  <div class="card">
+    <h2>③ オプション</h2>
+    <label class="toggle"><input type="checkbox" id="decoyChk"> おとり(余分な単語)を入れる</label>
+  </div>
+
+  <div class="row">
+    <button class="btn go" id="startBtn">スタート</button>
+    <button class="btn sub2" id="reviewBtn">ミス復習(<span id="missCount">0</span>問)</button>
+  </div>
+  <div class="err" id="err"></div>
+
+  <div class="card" style="margin-top:18px">
+    <h2>問題データ</h2>
+    <div class="src" id="srcInfo">読み込み中…</div>
+    <div style="margin-top:8px">
+      <input type="file" id="fileInput" accept=".csv,.xlsx,.xls">
+      <div class="src">別のCSV / xlsxを読み込むこともできます(この端末・この回のみ有効)。</div>
+    </div>
+  </div>
+</div>
+
+<!-- ゲーム画面 -->
+<div id="gameView" class="hidden">
+  <div class="top"><span id="lessonTag"></span><span id="progTxt"></span><span id="scoreTxt"></span></div>
+  <div class="bar"><i id="barFill"></i></div>
+  <div class="card">
+    <div class="jp" id="jpText"></div>
+    <div class="slot" id="slot"></div>
+    <div class="bank" id="bank"></div>
+    <div class="fb" id="fb"></div>
+    <div class="note" id="noteTxt"></div>
+    <div class="ctl">
+      <button class="btn primary" id="checkBtn">判定</button>
+      <button class="btn sub2" id="clearBtn">やり直し</button>
+      <button class="btn go hidden" id="nextBtn">次へ</button>
+    </div>
+  </div>
+  <button class="btn sub2" id="quitBtn">中断してもどる</button>
+</div>
+
+<!-- 結果画面 -->
+<div id="resultView" class="hidden">
+  <h1>けっか</h1>
+  <div class="card">
+    <div class="score"><span id="resScore"></span></div>
+    <div id="resDetail" class="info"></div>
+    <div id="missList"></div>
+    <div class="ctl">
+      <button class="btn warn hidden" id="retryMissBtn">間違えた問題をもう一度</button>
+      <button class="btn primary" id="backBtn">スタート画面へ</button>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+(function(){
+"use strict";
+var CSV_URL="questions.csv";   // ← 同じフォルダに置く既定の問題ファイル
+var MAX_TRY=3;                  // 1回目3点 / 2回目2点 / 3回目1点
+var LS_SEL="wo_lesson_sel_v1", LS_MISS="wo_miss_v1";
+
+var ALL=[];        // {id,lesson,jp,answer,words[],decoys[],note}
+var selLessons={}; // lesson -> true
+var countMode="10";
+var game=null;
+
+function $(id){return document.getElementById(id);}
+function show(v){["startView","gameView","resultView"].forEach(function(x){$(x).classList.toggle("hidden",x!==v);});}
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+function lsGet(k,d){try{var v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch(e){return d;}}
+function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+function lessonLabel(l){return /^\d+$/.test(l)?"Lesson "+l:l;}
+function naturalCmp(a,b){return a.localeCompare(b,undefined,{numeric:true});}
+
+/* ---------- CSV ---------- */
+function parseCSV(text){
+  if(text.charCodeAt(0)===0xFEFF)text=text.slice(1);
+  var rows=[],row=[],cell="",q=false;
+  for(var i=0;i<text.length;i++){
+    var c=text[i];
+    if(q){
+      if(c==='"'){ if(text[i+1]==='"'){cell+='"';i++;} else q=false; }
+      else cell+=c;
+    }else{
+      if(c==='"')q=true;
+      else if(c===","){row.push(cell);cell="";}
+      else if(c==="\n"){row.push(cell);rows.push(row);row=[];cell="";}
+      else if(c!=="\r")cell+=c;
+    }
+  }
+  if(cell!==""||row.length){row.push(cell);rows.push(row);}
+  return rows;
+}
+
+/* rows(2次元配列) → 問題リスト */
+function buildQuestions(rows){
+  if(!rows||rows.length<2)throw new Error("データが空です");
+  var head=rows[0].map(function(h){return String(h).trim().toLowerCase();});
+  function col(names){for(var i=0;i<names.length;i++){var k=head.indexOf(names[i]);if(k>=0)return k;}return -1;}
+  var cL=col(["lesson"]),cJ=col(["japanese","jp","question"]),cA=col(["answer"]),cD=col(["decoys","decoy"]),cN=col(["note","explanation"]);
+  if(cL<0||cJ<0||cA<0)throw new Error("列が足りません。必要な列: lesson, japanese, answer(任意: decoys, note)");
+  var out=[];
+  for(var r=1;r<rows.length;r++){
+    var row=rows[r];
+    var ans=String(row[cA]==null?"":row[cA]).trim();
+    var les=String(row[cL]==null?"":row[cL]).trim();
+    if(!ans||!les)continue;
+    var dec=cD>=0&&row[cD]?String(row[cD]).trim().split(/[|,\s]+/).filter(Boolean):[];
+    out.push({id:les+"::"+ans,lesson:les,jp:String(row[cJ]||"").trim(),answer:ans,
+      words:ans.split(/\s+/),decoys:dec,note:cN>=0&&row[cN]?String(row[cN]).trim():""});
+  }
+  if(!out.length)throw new Error("有効な問題が1問もありません");
+  return out;
+}
+
+function setData(qs,srcName){
+  ALL=qs;
+  var saved=lsGet(LS_SEL,null);
+  var ls=lessons();
+  selLessons={};
+  if(saved&&saved.lessons){saved.lessons.forEach(function(l){if(ls.indexOf(l)>=0)selLessons[l]=true;});}
+  if(!Object.keys(selLessons).length&&ls.length)selLessons[ls[0]]=true;
+  if(saved&&saved.count)countMode=saved.count;
+  if(saved&&typeof saved.decoy==="boolean")$("decoyChk").checked=saved.decoy;
+  $("srcInfo").textContent=srcName+":"+ALL.length+"問 / "+ls.length+" Lesson";
+  renderStart();
+}
+function lessons(){var s={};ALL.forEach(function(q){s[q.lesson]=1;});return Object.keys(s).sort(naturalCmp);}
+function countOf(l){return ALL.filter(function(q){return q.lesson===l;}).length;}
+
+/* ---------- スタート画面 ---------- */
+function selectedPool(){return ALL.filter(function(q){return selLessons[q.lesson];});}
+function renderStart(){
+  var box=$("lessonBox");box.innerHTML="";
+  lessons().forEach(function(l){
+    var b=document.createElement("button");
+    b.className="chip"+(selLessons[l]?" on":"");
+    b.innerHTML=lessonLabel(l)+"<small>("+countOf(l)+"問)</small>";
+    b.onclick=function(){if(selLessons[l])delete selLessons[l];else selLessons[l]=true;renderStart();};
+    box.appendChild(b);
+  });
+  var total=selectedPool().length;
+  $("totalCount").textContent=total;
+  Array.prototype.forEach.call($("countBox").children,function(b){b.classList.toggle("on",b.getAttribute("data-n")===countMode);});
+  var n=countMode==="all"?total:Math.min(+countMode,total);
+  $("countInfo").textContent=total?(countMode!=="all"&&+countMode>total?"選んだLessonは"+total+"問なので、"+total+"問に出題します。":"今回の出題数:"+n+"問(ランダム)"):"";
+  $("missCount").textContent=missPool().length;
+  $("startBtn").disabled=!total;
+  $("reviewBtn").disabled=!missPool().length;
+}
+function saveSel(){lsSet(LS_SEL,{lessons:Object.keys(selLessons),count:countMode,decoy:$("decoyChk").checked});}
+
+$("selAll").onclick=function(){lessons().forEach(function(l){selLessons[l]=true;});renderStart();};
+$("selNone").onclick=function(){selLessons={};renderStart();};
+Array.prototype.forEach.call($("countBox").children,function(b){b.onclick=function(){countMode=b.getAttribute("data-n");renderStart();};});
+$("decoyChk").onchange=saveSel;
+
+$("startBtn").onclick=function(){
+  var pool=shuffle(selectedPool());
+  var n=countMode==="all"?pool.length:Math.min(+countMode,pool.length);
+  saveSel();
+  startGame(pool.slice(0,n),false);
+};
+$("reviewBtn").onclick=function(){startGame(shuffle(missPool()),true);};
+
+/* ---------- ミス管理(Lesson横断・端末に保存) ---------- */
+function missIds(){return lsGet(LS_MISS,[]);}
+function missPool(){var ids=missIds();return ALL.filter(function(q){return ids.indexOf(q.id)>=0;});}
+function addMiss(id){var m=missIds();if(m.indexOf(id)<0){m.push(id);lsSet(LS_MISS,m);}}
+function removeMiss(id){lsSet(LS_MISS,missIds().filter(function(x){return x!==id;}));}
+
+/* ---------- ゲーム ---------- */
+function startGame(qs,isReview){
+  game={qs:qs,i:0,score:0,max:qs.length*MAX_TRY,missed:[],isReview:isReview,useDecoy:$("decoyChk").checked,tries:0,done:false,placed:[],tiles:[]};
+  show("gameView");loadQ();
+}
+function loadQ(){
+  var q=game.qs[game.i];
+  game.tries=0;game.done=false;game.placed=[];
+  var ws=q.words.slice();
+  if(game.useDecoy)ws=ws.concat(q.decoys);
+  var tiles=ws.map(function(w,k){return {id:k,w:w,used:false};});
+  // 正解と同じ並びにならないよう最大10回までシャッフル
+  var sh,t=0;do{sh=shuffle(tiles);t++;}while(t<10&&sh.map(function(x){return x.w;}).join(" ")===q.answer&&sh.length>1);
+  game.tiles=sh;
+  $("lessonTag").textContent=lessonLabel(q.lesson)+(game.isReview?"(復習)":"");
+  $("progTxt").textContent=(game.i+1)+" / "+game.qs.length;
+  $("scoreTxt").textContent="スコア "+game.score;
+  $("barFill").style.width=(game.i/game.qs.length*100)+"%";
+  $("jpText").textContent=q.jp;
+  $("fb").textContent="";$("fb").className="fb";
+  $("noteTxt").textContent="";
+  $("nextBtn").classList.add("hidden");
+  $("checkBtn").classList.remove("hidden");$("clearBtn").classList.remove("hidden");
+  draw();
+}
+function draw(){
+  var slot=$("slot"),bank=$("bank");slot.innerHTML="";bank.innerHTML="";
+  game.placed.forEach(function(t){
+    var b=document.createElement("button");b.className="tile";b.textContent=t.w;
+    b.onclick=function(){if(game.done)return;t.used=false;game.placed=game.placed.filter(function(x){return x!==t;});draw();};
+    slot.appendChild(b);
+  });
+  game.tiles.forEach(function(t){
+    var b=document.createElement("button");b.className="tile"+(t.used?" used":"");b.textContent=t.w;
+    b.onclick=function(){if(game.done||t.used)return;t.used=true;game.placed.push(t);draw();};
+    bank.appendChild(b);
+  });
+  $("checkBtn").disabled=game.done||!game.placed.length;
+}
+$("clearBtn").onclick=function(){if(game.done)return;game.tiles.forEach(function(t){t.used=false;});game.placed=[];draw();};
+$("checkBtn").onclick=function(){
+  if(game.done)return;
+  var q=game.qs[game.i];
+  var ans=game.placed.map(function(t){return t.w;}).join(" ");
+  game.tries++;
+  if(ans===q.answer){
+    var pt=MAX_TRY-game.tries+1;game.score+=pt;
+    finish(true,"⭕ 正解! +"+pt+"点");
+    if(game.tries>1){/* 2回目以降の正解はミス扱いのまま */}else removeMiss(q.id);
+  }else{
+    if(game.tries>=MAX_TRY){
+      addMiss(q.id);game.missed.push(q);
+      finish(false,"❌ 正解は: "+q.answer);
+    }else{
+      var s=$("slot");s.classList.remove("shake");void s.offsetWidth;s.classList.add("shake");
+      $("fb").className="fb ng";$("fb").textContent="おしい!もう一度(残り"+(MAX_TRY-game.tries)+"回)";
+      game.tiles.forEach(function(t){t.used=false;});game.placed=[];draw();
+    }
+  }
+};
+function finish(ok,msg){
+  game.done=true;
+  var q=game.qs[game.i];
+  if(ok&&game.tries>1){addMiss(q.id);game.missed.push(q);}
+  $("fb").className="fb "+(ok?"ok":"ng");$("fb").textContent=msg;
+  $("noteTxt").textContent=q.note;
+  $("scoreTxt").textContent="スコア "+game.score;
+  $("checkBtn").classList.add("hidden");$("clearBtn").classList.add("hidden");
+  $("nextBtn").classList.remove("hidden");
+  $("nextBtn").textContent=game.i+1>=game.qs.length?"結果を見る":"次へ";
+  $("checkBtn").disabled=true;
+}
+$("nextBtn").onclick=function(){
+  if(game.i+1>=game.qs.length){showResult();return;}
+  game.i++;loadQ();
+};
+$("quitBtn").onclick=function(){if(confirm("中断してスタート画面にもどりますか?")){renderStart();show("startView");}};
+
+/* ---------- 結果 ---------- */
+function showResult(){
+  show("resultView");
+  $("resScore").textContent=game.score+" / "+game.max+" 点";
+  $("resDetail").textContent="全"+game.qs.length+"問中、一発正解 "+(game.qs.length-game.missed.length)+"問(ミス "+game.missed.length+"問)";
+  var ml=$("missList");ml.innerHTML="";
+  if(game.missed.length){
+    var h=document.createElement("div");h.innerHTML="<b>復習しよう</b>";ml.appendChild(h);
+    var ul=document.createElement("ul");ul.className="miss";
+    game.missed.forEach(function(q){var li=document.createElement("li");li.textContent=q.jp+" → "+q.answer;ul.appendChild(li);});
+    ml.appendChild(ul);
+  }
+  $("retryMissBtn").classList.toggle("hidden",!game.missed.length);
+}
+$("retryMissBtn").onclick=function(){startGame(shuffle(game.missed),true);};
+$("backBtn").onclick=function(){renderStart();show("startView");};
+
+/* ---------- データ読み込み ---------- */
+function loadFile(f){
+  var name=f.name;
+  var rd=new FileReader();
+  if(/\.csv$/i.test(name)){
+    rd.onload=function(){try{setData(buildQuestions(parseCSV(String(rd.result))),name);$("err").textContent="";}catch(e){$("err").textContent="読み込み失敗: "+e.message;}};
+    rd.readAsText(f,"UTF-8");
+  }else{
+    rd.onload=function(){
+      try{
+        if(typeof XLSX==="undefined")throw new Error("xlsx読み込みライブラリが使えません(ネット接続を確認)");
+        var wb=XLSX.read(rd.result,{type:"array"});
+        var all=[];
+        wb.SheetNames.forEach(function(sn){
+          var rows=XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1,defval:""});
+          if(rows.length<2)return;
+          var h=rows[0].map(function(x){return String(x).trim().toLowerCase();});
+          if(h.indexOf("lesson")<0&&/^\d+$/.test(sn.replace(/\D/g,""))){ /* lesson列が無い場合はシート名をLessonとみなす */
+            var n=sn.replace(/\D/g,"");rows[0].unshift("lesson");for(var i=1;i<rows.length;i++)rows[i].unshift(n);
+          }
+          buildQuestions(rows).forEach(function(q){all.push(q);});
+        });
+        if(!all.length)throw new Error("有効な問題がありません");
+        setData(all,name);$("err").textContent="";
+      }catch(e){$("err").textContent="読み込み失敗: "+e.message;}
+    };
+    rd.readAsArrayBuffer(f);
+  }
+}
+$("fileInput").onchange=function(e){if(e.target.files[0])loadFile(e.target.files[0]);};
+
+function init(){
+  show("startView");
+  fetch(CSV_URL,{cache:"no-store"}).then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.text();})
+    .then(function(t){setData(buildQuestions(parseCSV(t)),CSV_URL);})
+    .catch(function(e){$("srcInfo").textContent="questions.csv を自動で読み込めませんでした。下のボタンからCSV/xlsxを選んでください。";$("err").textContent="("+e.message+")";renderStart();});
+}
+init();
+})();
+</script>
+</body>
+</html>
